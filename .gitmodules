@@ -1,0 +1,3 @@
+[submodule "src/host"]
+	path = src/host
+	url = https://github.com/dedmen/InterceptARHost.git
