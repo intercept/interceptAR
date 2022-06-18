@@ -30,3 +30,13 @@
 *.exe
 *.out
 *.app
+
+src/release/
+
+src/out/
+
+.vs/
+
+src/vc140.pdb
+
+src/vc140.idb

@@ -5,6 +5,7 @@
 import <filesystem>;
 import <string_view>;
 import <vector>;
+import <array>;
 //import <Windows.h>;
 #pragma warning(pop)
 
@@ -169,12 +170,13 @@ export namespace Util {
 
 export template <unsigned N>
 struct FixedString {
-    char buf[N + 1]{};
+    std::array<char, N+1> buf{};
     constexpr FixedString(const char* s) {
         for (unsigned i = 0; i != N; ++i)
             buf[i] = s[i];
     }
-    constexpr operator char const*() const { return buf; }
+    constexpr operator char const*() const { return buf.data(); }
+    constexpr size_t size() const { return N; }
 
     auto operator<=>(const FixedString&) const = default;
 };
