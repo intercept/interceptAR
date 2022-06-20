@@ -1,7 +1,5 @@
 #pragma once
 
-#include <Windows.h>
-
 class VariableDataHolder;
 class FunctionArgumentsHandler;
 class FunctionResultHandler;
@@ -11,10 +9,25 @@ export typedef void (*ScriptFunc)(FunctionArgumentsHandler& args, FunctionResult
 class IScriptClassBaseSimple;
 export typedef void (*registerClassT)(IScriptClassBaseSimple* self, std::string_view name, bool doReg);
 
+// Same as Enforce Script
+export enum class LogLevel {
+    Spam,
+    Verbose,
+    Debug,
+    Normal,
+    Warning,
+    Error,
+    Fatal
+};
+
 export class DllInterface {
 public:
     static const uint64_t CurrentVersion = 1;
     uint64_t version = CurrentVersion;
+
+    void (*printLogMessage)(std::string_view message, LogLevel logLevel);
+
+    // To not add/remove entries above here, even with changing CurrentVersion, thats not allowed.
 
     registerClassT regClass;
     bool (*varIsNull)(const VariableDataHolder* ivar);
@@ -34,17 +47,12 @@ export inline DllInterface GDllInterface;
 
 // Entry point in client DLL
 
-extern "C" {
-extern BOOL WINAPI _DllMainCRTStartup(
-    HINSTANCE const instance,
-    DWORD const reason,
-    LPVOID const reserved);
-}
-
 import <span>;
-uint8_t PtrHash(uintptr_t input) {
+import <format>;
+
+uint8_t PtrHash(uintptr_t input) { //#TODO move to Util?
     // auto bytes = std::bit_cast<std::array<uint8_t, sizeof(uintptr_t)>>(input); // MSVC I have no fucking idea whats wrong with you
-    auto bytes = std::span<uint8_t>(reinterpret_cast<uint8_t*>(&input)+1, 7);
+    auto bytes = std::span<uint8_t>(reinterpret_cast<uint8_t*>(&input) + 1, 7);
     uint8_t res = 0;
     for (const auto& byte : bytes) {
         res ^= byte;
@@ -53,7 +61,16 @@ uint8_t PtrHash(uintptr_t input) {
     return res;
 }
 
+#include <Windows.h>
 
+extern "C" {
+extern BOOL WINAPI _DllMainCRTStartup(
+    HINSTANCE const instance,
+    DWORD const reason,
+    LPVOID const reserved);
+}
+
+extern "C" IMAGE_DOS_HEADER __ImageBase;
 
 export extern "C" BOOL InterceptEntryPoint(HINSTANCE const instance,
                                            DWORD const reason,
@@ -81,10 +98,28 @@ export extern "C" BOOL InterceptEntryPoint(HINSTANCE const instance,
         }
     }
 
+    if (!hLoadedLibrary) {
+        Util::BreakToDebuggerIfPresent(); // No host?! Bad
+    }
+
     auto& hostDllInterface = *reinterpret_cast<const DllInterface*>(GetProcAddress(hLoadedLibrary, MAKEINTRESOURCEA(1)));
 
-    if (hostDllInterface.version != DllInterface::CurrentVersion)
+    if (hostDllInterface.version != DllInterface::CurrentVersion) {
+
+        // Get our name
+        char dllName[_MAX_PATH] {};
+        ::GetModuleFileNameA((HINSTANCE)&__ImageBase, dllName, _MAX_PATH);
+        
+        // printLogMessage should be here anyway even if version is wrong
+
+        // Would like to use std::filesystem::path::filename, but we cannot allocate yet. That means we also cannot use normal std::format
+        char logMsgBuffer[512] {};
+        std::format_to_n(logMsgBuffer, std::size(logMsgBuffer) - 1, "Intercept plugin \"{}\" is outdated relative to intercept host and refuses to load", dllName);
+
+        hostDllInterface.printLogMessage(logMsgBuffer, LogLevel::Error);
         return false;
+    }
+        
     
     GDllInterface = hostDllInterface;
 
