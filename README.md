@@ -1,6 +1,6 @@
 ![Intercept](http://i.imgur.com/J0PC0G0.png)
 
-Intercept is a C++20 binding interface for Arma Reforger's Enfusion Script.
+Intercept is a **C++20** binding interface for Arma Reforger's Enfusion Script.
 
 In a nutshell, Intercept lets you write your own "proto" methods in C++ code.
 
@@ -13,9 +13,11 @@ You can get an overview of what Features are planned or in-progress in our [Proj
 If you want to request new Features feel free to post on our [Discussions board](https://github.com/intercept/interceptAR/discussions/categories/ideas).
 
 Due to legal reasons the host side code is closed-source.
-And for safety reasons Intercept plugins will only work on a dedicated server or inside workbench, but not on clients.
+And for safety reasons Intercept plugins **will only work on a dedicated server or inside workbench**, but not on clients.
 
-InterceptAR requires a compiler with C++20 support that is ABI compatible with the InterceptHost.dll, in short, Visual Studio 2022.
+InterceptAR requires a compiler with C++20 support that is ABI compatible with the InterceptHost.dll, in short, **Visual Studio 2022**.
+
+Note: If you get **crashes** in your plugins, please don't submit the crash reports in the crash reporter, don't waste Enfusion developers time with crashes that are not their fault.
 
 ## Installation
 
