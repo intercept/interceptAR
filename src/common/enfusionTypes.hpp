@@ -17,7 +17,19 @@ export struct Vector3 { //#TODO
     float d[3]{};
 };
 
+// No export, only used for variable getter
+template<class T>
+class ENF_ArrayInstance {
 
+    void* dummy1;
+    void* dummy2;
+    void* dummy3;
+    void* dummy4;
+    void* dummy5;
+    ENF_Array<T> array;
+public: 
+    const ENF_Array<T>& GetArray() const { return array; }
+};
 
 
 
@@ -71,7 +83,7 @@ class VariableTypeInfo {
     uint32_t type{0}; // Type is only the first 4 bits, the rest is smth else
     VariableSubType subtype{0};
 public:
-    VariableType getType() const { return (VariableType)(type >> 28); }
+    VariableType GetType() const { return (VariableType)(type >> 28); }
     BitflagEnum<VariableSubType> getSubType() const { return subtype; }
 };
 
@@ -86,7 +98,7 @@ public:
         return name;
     }
     VariableType GetVariableType() const {
-        return type.getType();
+        return type.GetType();
     }
     BitflagEnum<VariableSubType> GetVariableSubType() const {
         return type.getSubType();
@@ -99,90 +111,112 @@ public:
 };
 
 
-export class VariableHelper : private VariableDataHolder {
+export class VariableHelper {
+    VariableDataHolder& holder;
+    const ENF_Variable& typeThing;
 public:
-    template <typename Type>
-    Type GetAs() const { return VariableDataHolder::GetAs<Type>(); };
+
+    VariableHelper(VariableDataHolder& holder, const ENF_Variable& typeThing) : holder(holder), typeThing(typeThing) {};
 
     template <typename Type>
-    void SetAs(Type value) {if (!isNull()) VariableDataHolder::GetAs<Type>() = value;};
+    Type GetAs() const { return holder.GetAs<Type>(); };
 
     template <typename Type>
-    static bool verifyTypeMatch(const ENF_Variable* var) { __debugbreak(); return false; };
+    void SetAs(Type value) {if (!IsNull()) holder.GetAs<Type>() = value;};
+
+    template <typename Type>
+    static bool VerifyTypeMatch(const ENF_Variable* var) { __debugbreak(); return false; };
 
 
     //#TODO this may be easier to read if implemented as classes but eeeh
 
-    template <> bool GetAs<bool>() const { return VariableDataHolder::GetAs<bool>();};
-    template <> void SetAs<bool>(bool value) { if (!isNull()) VariableDataHolder::GetAs<bool>() = value; };
-    template <> static bool verifyTypeMatch<bool>(const ENF_Variable* var) { return var && var->GetVariableType() == VariableType::IntT && !var->GetVariableSubType().isSet(VariableSubType::Pointer); };
+    template <> bool GetAs<bool>() const { return holder.GetAs<bool>();};
+    template <> void SetAs<bool>(bool value) { if (!IsNull()) holder.GetAs<bool>() = value; };
+    template <> static bool VerifyTypeMatch<bool>(const ENF_Variable* var) { return var && var->GetVariableType() == VariableType::IntT && !var->GetVariableSubType().isSet(VariableSubType::Pointer); };
 
-    template <> float GetAs<float>() const { return VariableDataHolder::GetAs<float>();};
-    template <> void SetAs<float>(float value) { if (!isNull()) VariableDataHolder::GetAs<float>() = value; };
-    template <> static bool verifyTypeMatch<float>(const ENF_Variable* var) { return var && var->GetVariableType() == VariableType::FloatT && !var->GetVariableSubType().isSet(VariableSubType::Pointer); };
+    template <> float GetAs<float>() const { return holder.GetAs<float>();};
+    template <> void SetAs<float>(float value) { if (!IsNull()) holder.GetAs<float>() = value; };
+    template <> static bool VerifyTypeMatch<float>(const ENF_Variable* var) { return var && var->GetVariableType() == VariableType::FloatT && !var->GetVariableSubType().isSet(VariableSubType::Pointer); };
 
-    template <> int GetAs<int>() const { return VariableDataHolder::GetAs<int>();};
-    template <> void SetAs<int>(int value) { if (!isNull()) VariableDataHolder::GetAs<int>() = value; };
-    template <> static bool verifyTypeMatch<int>(const ENF_Variable* var) { return var && var->GetVariableType() == VariableType::IntT && !var->GetVariableSubType().isSet(VariableSubType::Pointer); };
+    template <> int GetAs<int>() const { return holder.GetAs<int>();};
+    template <> void SetAs<int>(int value) { if (!IsNull()) holder.GetAs<int>() = value; };
+    template <> static bool VerifyTypeMatch<int>(const ENF_Variable* var) { return var && var->GetVariableType() == VariableType::IntT && !var->GetVariableSubType().isSet(VariableSubType::Pointer); };
 
-    template <> uint32_t GetAs<uint32_t>() const { return VariableDataHolder::GetAs<uint32_t>();};
-    template <> void SetAs<uint32_t>(uint32_t value) { if (!isNull()) VariableDataHolder::GetAs<uint32_t>() = value; };
-    template <> static bool verifyTypeMatch<uint32_t>(const ENF_Variable* var) { return var && var->GetVariableType() == VariableType::IntT && !var->GetVariableSubType().isSet(VariableSubType::Pointer); };
+    template <> uint32_t GetAs<uint32_t>() const { return holder.GetAs<uint32_t>();};
+    template <> void SetAs<uint32_t>(uint32_t value) { if (!IsNull()) holder.GetAs<uint32_t>() = value; };
+    template <> static bool VerifyTypeMatch<uint32_t>(const ENF_Variable* var) { return var && var->GetVariableType() == VariableType::IntT && !var->GetVariableSubType().isSet(VariableSubType::Pointer); };
 
     //#TODO is this incompatible with script? script doesn't have int64?
-    template <> uint64_t GetAs<uint64_t>() const { return VariableDataHolder::GetAs<uint64_t>();};
-    template <> void SetAs<uint64_t>(uint64_t value) { if (!isNull()) VariableDataHolder::GetAs<uint64_t>() = value; };
-    template <> static bool verifyTypeMatch<uint64_t>(const ENF_Variable* var) { return var && var->GetVariableType() == VariableType::IntT && !var->GetVariableSubType().isSet(VariableSubType::Pointer); };
+    template <> uint64_t GetAs<uint64_t>() const { return holder.GetAs<uint64_t>();};
+    template <> void SetAs<uint64_t>(uint64_t value) { if (!IsNull()) holder.GetAs<uint64_t>() = value; };
+    template <> static bool VerifyTypeMatch<uint64_t>(const ENF_Variable* var) { return var && var->GetVariableType() == VariableType::IntT && !var->GetVariableSubType().isSet(VariableSubType::Pointer); };
 
     // Color == Int
     // Enum
 
 
-    template <> const char* GetAs<const char*>() const { return VariableDataHolder::GetAs<const char*>();};
-    template <> void SetAs<const char*>(const char* value) { 
-         __debugbreak(); //#TODO major
-        // if (!isNull())
-        //     CopyString(value.cstr(), def, &GetAs<char*>(), forceCopy);
-    };
-    template <> static bool verifyTypeMatch<const char*>(const ENF_Variable* var) { return var && var->GetVariableType() == VariableType::IntT && var->GetVariableSubType().isSet(VariableSubType::Pointer) && var->GetSize() == 0; };
+    template <> const char* GetAs<const char*>() const { return holder.GetAs<const char*>();};
+    template <> void SetAs<const char*>(const char* value) { if (!IsNull()) GDllInterface.copyStringIntoVariable(value, &typeThing, &holder); };
+    template <> static bool VerifyTypeMatch<const char*>(const ENF_Variable* var) { return var && var->GetVariableType() == VariableType::StringT &&! var->GetVariableSubType().isSet(VariableSubType::Pointer); };
 
     template <typename T>
     struct assert_false : std::false_type {};
 
-    template <> std::string_view GetAs<std::string_view>() const { return std::string_view(VariableDataHolder::GetAs<const char*>());};
-    template <>
-    void SetAs<std::string_view>(std::string_view value) {
-        __debugbreak(); // Cannot set a string_view value, thats const :U :angery:
-        //static_assert(assert_false<std::string_view>::value);
-    };
-    template <> static bool verifyTypeMatch<std::string_view>(const ENF_Variable* var) { return var && var->GetVariableType() == VariableType::IntT && var->GetVariableSubType().isSet(VariableSubType::Pointer) && var->GetSize() == 0; };
 
 
+    template <> std::string_view GetAs<std::string_view>() const { return std::string_view(holder.GetAs<const char*>());};
+    //template <> void SetAs<std::string_view>(std::string_view value) { if (!IsNull()) GDllInterface.copyStringIntoVariable(value, &typeThing, &holder); };
+    //  Cannot do string_view, Enfusion code requires string to be nullterminated when we pass to copyStringIntoVariable. This needs to be improved on host side //#TODO Minor
+    template <> void SetAs<std::string_view>(std::string_view value) = delete;
+    template <> static bool VerifyTypeMatch<std::string_view>(const ENF_Variable* var) { return var && var->GetVariableType() == VariableType::StringT && !var->GetVariableSubType().isSet(VariableSubType::Pointer); };
 
     // arrays of floats
-    template <> Vector3 GetAs<Vector3>() const { return VariableDataHolder::GetAs<float*>(); };
-    template <> void SetAs<Vector3>(Vector3 value) {
-
-        memcpy(VariableDataHolder::GetAs<float*>(), value.d, sizeof(float) * 3);
-
-        //__debugbreak();
-        //static_assert(assert_false<Vector3>::value);
-    };
-    template <>
-    static bool verifyTypeMatch<Vector3>(const ENF_Variable* var) { return var && var->GetVariableType() == VariableType::VectorT && var->GetVariableSubType().isSet(VariableSubType::Pointer) && var->GetSize() == 3; }; //#RENAME IsPtr
+    template <> Vector3 GetAs<Vector3>() const { return holder.GetAs<float*>(); };
+    template <> void SetAs<Vector3>(Vector3 value) { memcpy(holder.GetAs<float*>(), value.d, sizeof(float) * 3); };
+    template <> static bool VerifyTypeMatch<Vector3>(const ENF_Variable* var) { return var && var->GetVariableType() == VariableType::VectorT && var->GetVariableSubType().isSet(VariableSubType::Pointer) && var->GetSize() == 3; };
 
     //#TODO Vector4, Quaternion, Matrix33, Matrix43, what else?
 
     //#TODO enum
 
+    // Array... meh... //#TODO make this a bit nicer? somehow?
+
+#define ARRAYTYPE(TYPE) \
+    template <> std::span<TYPE> GetAs<std::span<TYPE>>() const { return holder.GetAs<ENF_ArrayInstance<TYPE>*>()->GetArray().AsSpan(); }; \
+    template <> void SetAs<std::span<TYPE>>(std::span<TYPE> value) = delete; \
+    template <> static bool VerifyTypeMatch<std::span<TYPE>>(const ENF_Variable* var) { return var && var->GetVariableType() == VariableType::ClassT && var->GetVariableSubType().isSet(VariableSubType::Pointer); };
+
+    /*
+     Enforce Script defines these:
+        typedef array<string> TStringArray;
+        typedef array<float> TFloatArray;
+        typedef array<int> TIntArray;
+        typedef array<bool> TBoolArray;
+        typedef array<Class> TClassArray;
+        typedef array<Managed> TManagedArray;
+        typedef array<ref Managed> TManagedRefArray;
+        typedef array<vector> TVectorArray;
+        typedef array<pointer> TPointerArray;
+        typedef array<ResourceName> TResourceNameArray;
+
+     We currently don't support Instances, so Class/Managed/pointer is not available. Not sure about ResourceName, that might just be alias for string?
+     
+     */
+
+
+
+    ARRAYTYPE(Vector3)
+    ARRAYTYPE(const char*)
+    ARRAYTYPE(float)
+    ARRAYTYPE(int)
+    ARRAYTYPE(bool)
+#undef ARRAYTYPE
+
 
     //#TODO enfusionTypesTodo.hpp VariableHelper
 
-
-    bool isNull() const {
-        //#TODO check if this works, I think it doesn't, it checks this ptr, but it should probably check actual value stored inside
-        __debugbreak();
-        return GDllInterface.varIsNull(this);
+    bool IsNull() const {
+        return GDllInterface.varIsNull(&holder);
     }
 };
 
@@ -191,27 +225,27 @@ public:
 export class FunctionResultHandler {
 public:
     template <typename Type>
-    Type GetAs() const { return getHelper()->GetAs<Type>(); };
+    Type GetAs() const { return getHelper().GetAs<Type>(); };
 
     template <typename Type>
-    bool verifyType() const {
-        return VariableHelper::verifyTypeMatch<Type>(varInternal);
+    bool VerifyType() const {
+        return VariableHelper::VerifyTypeMatch<Type>(varInternal);
     }
 
-    VariableType getType() const {
+    VariableType GetType() const {
         return varInternal->GetVariableType();
     }
 
     template <typename Type>
     void SetAs(const Type& value) {
-        if (verifyType<Type>()) {
-            getHelper()->SetAs<Type>(value);
+        if (VerifyType<Type>()) {
+            getHelper().SetAs<Type>(value);
         } else
             __debugbreak();
     };
 
-    bool isNull() const {
-        return getHelper()->isNull();
+    bool IsNull() const {
+        return getHelper().IsNull();
     }
 
 
@@ -223,12 +257,12 @@ protected:
     ENF_Variable* varInternal;
 
     
-    VariableHelper* getHelper() {
-        return reinterpret_cast<VariableHelper*>(varInternal);
+    VariableHelper getHelper() {
+        return VariableHelper(*varInternal, *varInternal);
     }
 
-    const VariableHelper* getHelper() const {
-        return reinterpret_cast<const VariableHelper*>(varInternal);
+    const VariableHelper getHelper() const {
+        return VariableHelper(*varInternal, *varInternal);
     }
 
 };
@@ -236,13 +270,13 @@ protected:
 export class FunctionArgumentsHandler {
 public:
     template <typename Type>
-    Type GetAs(uint32_t index) const { return getHelper(index)->GetAs<Type>(); };
+    Type GetAs(uint32_t index) const { return getHelper(index).GetAs<Type>(); };
 
     // Variables arguments are read only
     //#TODO minor, out parameters are not! Can easily add verification here that its out param type
     //template <typename Type>
     //void SetAs(const Type& value) {
-    //    if (verifyType<Type>()) {
+    //    if (VerifyType<Type>()) {
     //        getHelper()->SetAs<Type>(value);
     //    } else
     //        __debugbreak();
@@ -250,24 +284,24 @@ public:
 
 
     template <typename Type>
-    bool verifyType(uint32_t index) const {
-        return VariableHelper::verifyTypeMatch<Type>(getVarTypeThing(index));
+    bool VerifyType(uint32_t index) const {
+        return VariableHelper::VerifyTypeMatch<Type>(getVarTypeThing(index));
     }
 
-    VariableType getType(uint32_t index) const {
+    VariableType GetType(uint32_t index) const {
         return getVarTypeThing(index)->GetVariableType();
     }
 
     template <typename Type>
     void SetAs(uint32_t index, const Type& value) {
-        if (verifyType<Type>(index)) {
-            getHelper(index)->SetAs<Type>(value);
+        if (VerifyType<Type>(index)) {
+            getHelper(index).SetAs<Type>(value);
         } else
             __debugbreak();
     };
 
-    bool isNull(uint32_t index) const {
-        return getHelper(index)->isNull();
+    bool IsNull(uint32_t index) const {
+        return getHelper(index).IsNull();
     }
 
      //#TODO major?
@@ -279,12 +313,12 @@ protected:
     VariableDataHolder** variablesArray;
     const ENF_Variable* const* variableTypesThing;
 
-    VariableHelper* getHelper(uint32_t index) {
-        return reinterpret_cast<VariableHelper*>(variablesArray[index]);
+    VariableHelper getHelper(uint32_t index) {
+        return VariableHelper(*variablesArray[index], *variableTypesThing[index]);
     }
 
-    const VariableHelper* getHelper(uint32_t index) const {
-        return reinterpret_cast<const VariableHelper*>(variablesArray[index]);
+    const VariableHelper getHelper(uint32_t index) const {
+        return VariableHelper(*variablesArray[index], *variableTypesThing[index]);
     }
 
     const ENF_Variable* getVarTypeThing(uint32_t index) const {
@@ -308,23 +342,23 @@ public:
 
     template <typename Type>
     void SetAs(const Type& value) {
-        if (verifyType<Type>()) {
+        if (VerifyType<Type>()) {
             getHelper()->SetAs<Type>(value);
         } else
             __debugbreak();
     };
 
     template <typename Type>
-    bool verifyType() const {
-        return VariableHelper::verifyTypeMatch<Type>(variableTypeThing);
+    bool VerifyType() const {
+        return VariableHelper::VerifyTypeMatch<Type>(variableTypeThing);
     }
 
-    VariableType getType() const {
+    VariableType GetType() const {
         return variableTypeThing->GetVariableType();
     }
 
-    bool isNull() const {
-        return getHelper()->isNull();
+    bool IsNull() const {
+        return getHelper()->IsNull();
     }
 
     bool IsValid() const {

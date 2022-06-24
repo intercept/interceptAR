@@ -10,7 +10,8 @@ public:
     uint32_t bufferSize;
     uint32_t size;
 
-    std::span<Type> AsSpan() {
+
+    std::span<Type> AsSpan() const {
         return std::span(data, size);
     }
 };

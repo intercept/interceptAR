@@ -3,6 +3,7 @@
 class VariableDataHolder;
 class FunctionArgumentsHandler;
 class FunctionResultHandler;
+class ENF_Variable;
 
 
 export typedef void (*ScriptFunc)(FunctionArgumentsHandler& args, FunctionResultHandler& result);
@@ -31,6 +32,11 @@ public:
 
     registerClassT regClass;
     bool (*varIsNull)(const VariableDataHolder* ivar);
+
+    // Important, for now inputString needs to be null terminated, real std::string_view is not supported. That needs a change on host side, we still take std::string_view here so we don't need to change API version when this gets fixed
+    void (*copyStringIntoVariable)(std::string_view inputString, const ENF_Variable* targetVariableType, VariableDataHolder* targetVariableDataHolder);
+    
+
     //#TODO copystring
 
 };
