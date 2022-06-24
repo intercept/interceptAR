@@ -8,6 +8,10 @@ Intercept works on a host/client based system, in which the host, Intercept itse
 
 This project is still in early stages, functionality is limited but it should be sufficient for most use cases.
 
+You can get an overview of what Features are planned or in-progress in our [Project board](https://github.com/orgs/intercept/projects/1)
+
+If you want to request new Features feel free to post on our [Discussions board](https://github.com/intercept/interceptAR/discussions/categories/ideas).
+
 Due to legal reasons the host side code is closed-source.
 And for safety reasons Intercept plugins will only work on a dedicated server or inside workbench, but not on clients.
 
