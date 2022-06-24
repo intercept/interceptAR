@@ -241,7 +241,7 @@ public:
         if (VerifyType<Type>()) {
             getHelper().SetAs<Type>(value);
         } else
-            __debugbreak();
+            __debugbreak(); // You passed a invalid type, the variable stored here is not the type you are trying to set it ass
     };
 
     bool IsNull() const {
@@ -297,7 +297,7 @@ public:
         if (VerifyType<Type>(index)) {
             getHelper(index).SetAs<Type>(value);
         } else
-            __debugbreak();
+            __debugbreak(); // You passed a invalid type, the variable stored here is not the type you are trying to set it ass
     };
 
     bool IsNull(uint32_t index) const {
@@ -345,7 +345,7 @@ public:
         if (VerifyType<Type>()) {
             getHelper()->SetAs<Type>(value);
         } else
-            __debugbreak();
+            __debugbreak(); // You passed a invalid type, the variable stored here is not the type you are trying to set it ass
     };
 
     template <typename Type>
@@ -476,7 +476,8 @@ protected:
 
     virtual ~IScriptClassBaseSimple() {
         // UnRegister
-        __debugbreak(); // Cannot do that currently
+        Util::BreakToDebuggerIfPresent();
+        //__debugbreak(); // Cannot do that currently
         //GDllInterface.regClass(this, {}, false);
     }
 

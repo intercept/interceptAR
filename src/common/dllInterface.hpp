@@ -106,6 +106,7 @@ export extern "C" BOOL InterceptEntryPoint(HINSTANCE const instance,
 
     if (!hLoadedLibrary) {
         Util::BreakToDebuggerIfPresent(); // No host?! Bad
+        return false;
     }
 
     auto& hostDllInterface = *reinterpret_cast<const DllInterface*>(GetProcAddress(hLoadedLibrary, MAKEINTRESOURCEA(1)));
