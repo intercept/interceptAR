@@ -41,15 +41,7 @@ public:
 
 };
 
-extern DllInterface GDllInterface;
-// __declspec(dllexport)
 export inline DllInterface GDllInterface;
-
-//#TODO only host DLL should export, doesn't matter much though
-
-#pragma comment(linker, "/export:GDllInterface=?GDllInterface@@3VDllInterface@@A,@1,NONAME,DATA")
-//export extern "C" __declspec(dllexport) DllInterface& _InterceptGetDllInterface() { return GDllInterface; }
-
 
 // Entry point in client DLL
 
@@ -121,7 +113,11 @@ export extern "C" BOOL InterceptEntryPoint(HINSTANCE const instance,
 
         // Would like to use std::filesystem::path::filename, but we cannot allocate yet. That means we also cannot use normal std::format
         char logMsgBuffer[512] {};
-        std::format_to_n(logMsgBuffer, std::size(logMsgBuffer) - 1, "Intercept plugin \"{}\" is outdated relative to intercept host and refuses to load", dllName);
+        #ifdef __cpp_lib_format
+            std::format_to_n(logMsgBuffer, std::size(logMsgBuffer) - 1, "Intercept plugin \"{}\" is outdated relative to intercept host and refuses to load", dllName);
+        #else
+            std::snprintf(logMsgBuffer, std::size(logMsgBuffer) - 1, "Intercept plugin \"%s\" is outdated relative to intercept host and refuses to load", dllName);
+        #endif
 
         hostDllInterface.printLogMessage(logMsgBuffer, LogLevel::Error);
         return false;
