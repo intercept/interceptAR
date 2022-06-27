@@ -11,7 +11,7 @@ class IScriptClassBaseSimple;
 export typedef void (*registerClassT)(IScriptClassBaseSimple* self, std::string_view name, bool doReg);
 
 // Same as Enforce Script
-export enum class LogLevel {
+export enum class LogLevel : uint8_t {
     Spam,
     Verbose,
     Debug,
@@ -21,12 +21,13 @@ export enum class LogLevel {
     Fatal
 };
 
+//#TODO move into internal namespace, need exported for host, but normal users don't access this
 export class DllInterface {
 public:
     static const uint64_t CurrentVersion = 1;
     uint64_t version = CurrentVersion;
 
-    void (*printLogMessage)(std::string_view message, LogLevel logLevel);
+    void (*printLogMessage)(LogLevel level, std::string_view msg);
 
     // To not add/remove entries above here, even with changing CurrentVersion, thats not allowed.
 
@@ -35,13 +36,25 @@ public:
 
     // Important, for now inputString needs to be null terminated, real std::string_view is not supported. That needs a change on host side, we still take std::string_view here so we don't need to change API version when this gets fixed
     void (*copyStringIntoVariable)(std::string_view inputString, const ENF_Variable* targetVariableType, VariableDataHolder* targetVariableDataHolder);
-    
-
-    //#TODO copystring
-
 };
 
 export inline DllInterface GDllInterface;
+
+//#TODO move this
+
+export class Intercept {
+
+public:
+    static void Print(LogLevel level, std::string_view msg)
+    {
+        GDllInterface.printLogMessage(level, msg);
+    }
+
+};
+
+
+
+
 
 // Entry point in client DLL
 
@@ -73,6 +86,10 @@ extern "C" IMAGE_DOS_HEADER __ImageBase;
 export extern "C" BOOL InterceptEntryPoint(HINSTANCE const instance,
                                            DWORD const reason,
                                            LPVOID const reserved) {
+
+    if (reason != DLL_PROCESS_ATTACH) // We only do special handling at first load
+        return _DllMainCRTStartup(instance, reason, reserved);
+
     // First code of a Intercept plugin that runs
     // We find our host, and grab its DLL interface struct
     // The host cannot set it for us because it cannot run code before our DllMain runs, but we need it to be initialized before crt init
@@ -119,7 +136,7 @@ export extern "C" BOOL InterceptEntryPoint(HINSTANCE const instance,
             std::snprintf(logMsgBuffer, std::size(logMsgBuffer) - 1, "Intercept plugin \"%s\" is outdated relative to intercept host and refuses to load", dllName);
         #endif
 
-        hostDllInterface.printLogMessage(logMsgBuffer, LogLevel::Error);
+        hostDllInterface.printLogMessage(LogLevel::Error, logMsgBuffer);
         return false;
     }
         
