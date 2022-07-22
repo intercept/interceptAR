@@ -1,7 +1,7 @@
 #pragma once
 
-#include "interceptTypes.hpp"
-import <span>;
+//#include "interceptTypes.hpp"
+//#include <span>
 
 export template <typename Type>
 class ENF_Array {
@@ -12,6 +12,6 @@ public:
 
 
     std::span<Type> AsSpan() const {
-        return std::span(data, size);
+        return std::span<Type>(data, size);
     }
 };

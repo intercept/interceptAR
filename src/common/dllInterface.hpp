@@ -38,7 +38,12 @@ public:
     void (*copyStringIntoVariable)(std::string_view inputString, const ENF_Variable* targetVariableType, VariableDataHolder* targetVariableDataHolder);
 };
 
-export inline DllInterface GDllInterface;
+export inline
+#ifndef WIN32
+    __attribute__((visibility("default")))
+    //__attribute__((__symver__("GDllInterface@1")))
+#endif
+DllInterface GDllInterface;
 
 //#TODO move this
 
@@ -52,14 +57,10 @@ public:
 
 };
 
-
-
-
-
 // Entry point in client DLL
 
-import <span>;
-import <format>;
+
+#ifdef _WIN32
 
 uint8_t PtrHash(uintptr_t input) { //#TODO move to Util?
     // auto bytes = std::bit_cast<std::array<uint8_t, sizeof(uintptr_t)>>(input); // MSVC I have no fucking idea whats wrong with you
@@ -145,3 +146,42 @@ export extern "C" BOOL InterceptEntryPoint(HINSTANCE const instance,
 
     return _DllMainCRTStartup(instance, reason, reserved);
 }
+
+#else
+
+// Linux entry point
+
+void __attribute__((constructor(0))) InterceptEntryPoint(void) {
+
+    // find host
+    Util::BreakToDebuggerIfPresent();
+    auto hostRef = dlopen("InterceptHost.so", RTLD_NOLOAD);
+
+    // https://anadoxin.org/blog/control-over-symbol-exports-in-gcc.html/
+    //  -fvisibility=hidden compile option?
+
+    auto& hostDllInterface = *reinterpret_cast<const DllInterface*>(dlsym(hostRef, "GDllInterface@1"));
+
+    if (hostDllInterface.version != DllInterface::CurrentVersion) {
+
+        // printLogMessage should be here anyway even if version is wrong
+
+        // Would like to use std::filesystem::path::filename, but we cannot allocate yet. That means we also cannot use normal std::format
+        char logMsgBuffer[512]{};
+#ifdef __cpp_lib_format
+        std::format_to_n(logMsgBuffer, std::size(logMsgBuffer) - 1, "Intercept plugin \"{}\" is outdated relative to intercept host and refuses to load", dllName);
+#else
+        std::snprintf(logMsgBuffer, std::size(logMsgBuffer) - 1, "Intercept plugin \"%s\" is outdated relative to intercept host and refuses to load", "#TODO");
+#endif
+
+        hostDllInterface.printLogMessage(LogLevel::Error, logMsgBuffer);
+        return;
+    }
+
+
+    GDllInterface = hostDllInterface;
+}
+
+
+
+#endif

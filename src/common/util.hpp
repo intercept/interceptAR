@@ -1,15 +1,5 @@
 #pragma once
 
-#pragma warning(push)
-#pragma warning(disable: 4005) // macro redefinition
-import <filesystem>;
-import <string_view>;
-import <vector>;
-import <array>;
-import <charconv>;
-//import <Windows.h>;
-#pragma warning(pop)
-
 using namespace std::string_view_literals;
 
 export namespace Util {
@@ -108,6 +98,7 @@ export namespace Util {
     };
 
     std::filesystem::path GetCurrentDLLPath() {
+#ifdef _WIN32
         char path[MAX_PATH];
         HMODULE hm = NULL;
 
@@ -125,22 +116,68 @@ export namespace Util {
         }
 
         return std::filesystem::path(path);
+#else
+        raise(SIGTRAP);
+        return {};
+#endif
     }
 
+    std::wstring UTF8ToUTF16(std::string_view input) {
+#ifdef _WIN32
+        const auto wantedSize = MultiByteToWideChar(CP_UTF8, 0, input.data(), input.length(), nullptr, 0);
+        std::wstring result;
+        result.resize(wantedSize);
+        MultiByteToWideChar(CP_UTF8, 0, input.data(), input.length(), result.data(), result.length());
+        return result;
+#else
+        raise(SIGTRAP);
+        return {};
+#endif
+    }
+
+    std::string UTF16ToUTF8(std::wstring_view input) {
+#ifdef _WIN32
+        const auto wantedSize = WideCharToMultiByte(CP_UTF8, 0, input.data(), input.length(), nullptr, 0, nullptr, nullptr);
+        std::string result;
+        result.resize(wantedSize);
+        WideCharToMultiByte(CP_UTF8, 0, input.data(), input.length(), result.data(), result.length(), nullptr, nullptr);
+        return result;
+#else
+        raise(SIGTRAP);
+        return {};
+#endif
+    }
+
+
     void* GetArmaHostProcAddress(std::string name) {
+#ifdef _WIN32
         return GetProcAddress(GetModuleHandleA(nullptr), name.data());
+#else
+        raise(SIGTRAP);
+        return nullptr;
+#endif
     }
 
     bool IsDebuggerPresent() {
+#ifdef _WIN32
         return ::IsDebuggerPresent();
+#else
+        raise(SIGTRAP);
+        return false;
+#endif
     }
 
     void BreakToDebuggerIfPresent() {
+#ifdef _WIN32
         if (::IsDebuggerPresent())
             __debugbreak();
+#else
+        raise(SIGTRAP);
+#endif
     }
 
     void WaitForDebuggerSilent() {
+#ifdef _WIN32
         if (IsDebuggerPresent())
             return;
 
@@ -149,9 +186,13 @@ export namespace Util {
 
         // We waited for attach, so break us there
         __debugbreak();
+#else
+        raise(SIGTRAP);
+#endif
     }
 
     void WaitForDebuggerPrompt() {
+#ifdef _WIN32
         if (IsDebuggerPresent())
             return;
 
@@ -160,12 +201,19 @@ export namespace Util {
 
         // We waited for attach, so break us there
         __debugbreak();
+#else
+        raise(SIGTRAP);
+#endif
     }
 
 
     void PrintDebugString(std::string message) {
+#ifdef _WIN32
         OutputDebugStringA(message.data());
         OutputDebugStringA("\n");
+#else
+        raise(SIGTRAP);
+#endif
     }
 }; // namespace Util
 

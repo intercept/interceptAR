@@ -1,14 +1,5 @@
 #pragma once
 
-#include "interceptTypes.hpp"
-
-import <cstdint>;
-import <functional>;
-import <typeinfo>;
-import <optional>;
-
-
-
 // Generic
 
 export struct Vector3 { //#TODO
@@ -111,7 +102,21 @@ public:
 };
 
 
+// I would put the get templates into Variable Helper, but cannot use templates here, not supported in GCC https://gcc.gnu.org/bugzilla/show_bug.cgi?id=85282
+
+class VariableHelper;
+
+namespace internal {
+    template<typename Type>
+    struct VarTraits;
+}
+
+
+
 export class VariableHelper {
+    template <typename Type>
+    friend struct internal::VarTraits;
+
     VariableDataHolder& holder;
     const ENF_Variable& typeThing;
 public:
@@ -119,98 +124,31 @@ public:
     VariableHelper(VariableDataHolder& holder, const ENF_Variable& typeThing) : holder(holder), typeThing(typeThing) {};
 
     template <typename Type>
-    Type GetAs() const { return holder.GetAs<Type>(); };
+    Type GetAs() const {
+        return internal::VarTraits<Type>::GetAs(*this);
+    };
 
     template <typename Type>
-    void SetAs(Type value) {if (!IsNull()) holder.GetAs<Type>() = value;};
+    void SetAs(Type value) {
+        internal::VarTraits<Type>::SetAs(*this, value);
+    };
 
     template <typename Type>
-    static bool VerifyTypeMatch(const ENF_Variable* var) { __debugbreak(); return false; };
-
-
-    //#TODO this may be easier to read if implemented as classes but eeeh
-
-    template <> bool GetAs<bool>() const { return holder.GetAs<bool>();};
-    template <> void SetAs<bool>(bool value) { if (!IsNull()) holder.GetAs<bool>() = value; };
-    template <> static bool VerifyTypeMatch<bool>(const ENF_Variable* var) { return var && var->GetVariableType() == VariableType::IntT && !var->GetVariableSubType().isSet(VariableSubType::Pointer); };
-
-    template <> float GetAs<float>() const { return holder.GetAs<float>();};
-    template <> void SetAs<float>(float value) { if (!IsNull()) holder.GetAs<float>() = value; };
-    template <> static bool VerifyTypeMatch<float>(const ENF_Variable* var) { return var && var->GetVariableType() == VariableType::FloatT && !var->GetVariableSubType().isSet(VariableSubType::Pointer); };
-
-    template <> int GetAs<int>() const { return holder.GetAs<int>();};
-    template <> void SetAs<int>(int value) { if (!IsNull()) holder.GetAs<int>() = value; };
-    template <> static bool VerifyTypeMatch<int>(const ENF_Variable* var) { return var && var->GetVariableType() == VariableType::IntT && !var->GetVariableSubType().isSet(VariableSubType::Pointer); };
-
-    template <> uint32_t GetAs<uint32_t>() const { return holder.GetAs<uint32_t>();};
-    template <> void SetAs<uint32_t>(uint32_t value) { if (!IsNull()) holder.GetAs<uint32_t>() = value; };
-    template <> static bool VerifyTypeMatch<uint32_t>(const ENF_Variable* var) { return var && var->GetVariableType() == VariableType::IntT && !var->GetVariableSubType().isSet(VariableSubType::Pointer); };
-
-    //#TODO is this incompatible with script? script doesn't have int64?
-    template <> uint64_t GetAs<uint64_t>() const { return holder.GetAs<uint64_t>();};
-    template <> void SetAs<uint64_t>(uint64_t value) { if (!IsNull()) holder.GetAs<uint64_t>() = value; };
-    template <> static bool VerifyTypeMatch<uint64_t>(const ENF_Variable* var) { return var && var->GetVariableType() == VariableType::IntT && !var->GetVariableSubType().isSet(VariableSubType::Pointer); };
+    static bool VerifyTypeMatch(const ENF_Variable* var) {
+        return internal::VarTraits<Type>::VerifyTypeMatch(var);
+    };
 
     // Color == Int
     // Enum
-
-
-    template <> const char* GetAs<const char*>() const { return holder.GetAs<const char*>();};
-    template <> void SetAs<const char*>(const char* value) { if (!IsNull()) GDllInterface.copyStringIntoVariable(value, &typeThing, &holder); };
-    template <> static bool VerifyTypeMatch<const char*>(const ENF_Variable* var) { return var && var->GetVariableType() == VariableType::StringT &&! var->GetVariableSubType().isSet(VariableSubType::Pointer); };
 
     template <typename T>
     struct assert_false : std::false_type {};
 
 
 
-    template <> std::string_view GetAs<std::string_view>() const { return std::string_view(holder.GetAs<const char*>());};
-    //template <> void SetAs<std::string_view>(std::string_view value) { if (!IsNull()) GDllInterface.copyStringIntoVariable(value, &typeThing, &holder); };
-    //  Cannot do string_view, Enfusion code requires string to be nullterminated when we pass to copyStringIntoVariable. This needs to be improved on host side //#TODO Minor
-    template <> void SetAs<std::string_view>(std::string_view value) = delete;
-    template <> static bool VerifyTypeMatch<std::string_view>(const ENF_Variable* var) { return var && var->GetVariableType() == VariableType::StringT && !var->GetVariableSubType().isSet(VariableSubType::Pointer); };
-
-    // arrays of floats
-    template <> Vector3 GetAs<Vector3>() const { return holder.GetAs<float*>(); };
-    template <> void SetAs<Vector3>(Vector3 value) { memcpy(holder.GetAs<float*>(), value.d, sizeof(float) * 3); };
-    template <> static bool VerifyTypeMatch<Vector3>(const ENF_Variable* var) { return var && var->GetVariableType() == VariableType::VectorT && var->GetVariableSubType().isSet(VariableSubType::Pointer) && var->GetSize() == 3; };
-
-    //#TODO Vector4, Quaternion, Matrix33, Matrix43, what else?
-
     //#TODO enum
 
     // Array... meh... //#TODO make this a bit nicer? somehow?
-
-#define ARRAYTYPE(TYPE) \
-    template <> std::span<TYPE> GetAs<std::span<TYPE>>() const { return holder.GetAs<ENF_ArrayInstance<TYPE>*>()->GetArray().AsSpan(); }; \
-    template <> void SetAs<std::span<TYPE>>(std::span<TYPE> value) = delete; \
-    template <> static bool VerifyTypeMatch<std::span<TYPE>>(const ENF_Variable* var) { return var && var->GetVariableType() == VariableType::ClassT && var->GetVariableSubType().isSet(VariableSubType::Pointer); };
-
-    /*
-     Enforce Script defines these:
-        typedef array<string> TStringArray;
-        typedef array<float> TFloatArray;
-        typedef array<int> TIntArray;
-        typedef array<bool> TBoolArray;
-        typedef array<Class> TClassArray;
-        typedef array<Managed> TManagedArray;
-        typedef array<ref Managed> TManagedRefArray;
-        typedef array<vector> TVectorArray;
-        typedef array<pointer> TPointerArray;
-        typedef array<ResourceName> TResourceNameArray;
-
-     We currently don't support Instances, so Class/Managed/pointer is not available. Not sure about ResourceName, that might just be alias for string?
-     
-     */
-
-
-
-    ARRAYTYPE(Vector3)
-    ARRAYTYPE(const char*)
-    ARRAYTYPE(float)
-    ARRAYTYPE(int)
-    ARRAYTYPE(bool)
-#undef ARRAYTYPE
 
 
     //#TODO enfusionTypesTodo.hpp VariableHelper
@@ -219,6 +157,190 @@ public:
         return GDllInterface.varIsNull(&holder);
     }
 };
+
+
+namespace internal {
+
+    // Checks if input is either A or A& or A&& or const A&, we don't care, use whatever
+    template <typename A, typename T>
+    concept IsMatchingUnderlyingType = std::is_same_v<A, std::remove_cvref_t<T>>;
+
+    template <typename Type>
+    struct VarTraits {
+
+        static Type GetAs(const VariableHelper& holder) {
+            if constexpr (std::is_pointer_v<Type>)
+                return holder.holder.GetAs<Type>();
+          
+            static_assert(sizeof(Type) < 0 || std::is_pointer_v<Type>, "Invalid Type used in GetAs");
+        }
+        template <IsMatchingUnderlyingType<Type> NewT>
+        static void SetAs(const VariableHelper& holder, NewT newValue) { static_assert(sizeof(Type) < 0, "Invalid Type used in SetAs"); }
+        static bool VerifyTypeMatch(const ENF_Variable* var) {
+            static_assert(sizeof(Type) < 0, "Invalid Type used in VerifyTypeMatch");
+            return false;
+        }
+    };
+
+    // Implementations are below VariableHelper
+
+    template <>
+    struct VarTraits<bool> {
+        using Type = bool;
+
+        static Type GetAs(const VariableHelper& holder) { return holder.holder.GetAs<Type>(); }
+
+        template <IsMatchingUnderlyingType<Type> NewT>
+        static void SetAs(const VariableHelper& holder, NewT newValue) {
+            if (!holder.IsNull())
+                holder.holder.GetAs<std::remove_cvref_t<Type>&>() = newValue;
+        }
+        static bool VerifyTypeMatch(const ENF_Variable* var) {
+            return var && var->GetVariableType() == VariableType::IntT && !var->GetVariableSubType().isSet(VariableSubType::Pointer);
+        }
+    };
+
+    template <>
+    struct VarTraits<float> {
+        using Type = float;
+
+        static Type GetAs(const VariableHelper& holder) { return holder.holder.GetAs<Type>(); }
+
+        template <IsMatchingUnderlyingType<Type> NewT>
+        static void SetAs(const VariableHelper& holder, NewT newValue) {
+            if (!holder.IsNull())
+                holder.holder.GetAs<std::remove_cvref_t<Type>&>() = newValue;
+        }
+        static bool VerifyTypeMatch(const ENF_Variable* var) {
+            return var && var->GetVariableType() == VariableType::FloatT && !var->GetVariableSubType().isSet(VariableSubType::Pointer);
+        }
+    };
+
+    template <>
+    struct VarTraits<int> {
+        using Type = int;
+
+        static Type GetAs(const VariableHelper& holder) { return holder.holder.GetAs<Type>(); }
+
+        template <IsMatchingUnderlyingType<Type> NewT>
+        static void SetAs(const VariableHelper& holder, NewT newValue) {
+            if (!holder.IsNull())
+                holder.holder.GetAs<std::remove_cvref_t<Type>&>() = newValue;
+        }
+        static bool VerifyTypeMatch(const ENF_Variable* var) {
+            return var && var->GetVariableType() == VariableType::IntT && !var->GetVariableSubType().isSet(VariableSubType::Pointer);
+        }
+    };
+
+    template <>
+    struct VarTraits<uint32_t> {
+        using Type = uint32_t;
+
+        static Type GetAs(const VariableHelper& holder) { return holder.holder.GetAs<Type>(); }
+
+        template <IsMatchingUnderlyingType<Type> NewT>
+        static void SetAs(const VariableHelper& holder, NewT newValue) {
+            if (!holder.IsNull())
+                holder.holder.GetAs<std::remove_cvref_t<Type>&>() = newValue;
+        }
+        static bool VerifyTypeMatch(const ENF_Variable* var) {
+            return var && var->GetVariableType() == VariableType::IntT && !var->GetVariableSubType().isSet(VariableSubType::Pointer);
+        }
+    };
+
+    //#TODO is this incompatible with script? script doesn't have int64?
+    // template <>
+    // struct VarTraits<uint64_t> {
+    //    using Type = uint64_t;
+    //
+    //    Type GetAs(const VariableHelper& holder) const { return holder.GetAs<Type>(); }
+    //
+    //    template <IsMatchingUnderlyingType<Type> NewT>
+    //    void SetAs(const VariableHelper& holder, NewT newValue) const {
+    //        if (!holder.IsNull())
+    //            holder.GetAs<Type>() = value;
+    //    }
+    //    bool VerifyTypeMatch(const ENF_Variable* var) {
+    //        return var && var->GetVariableType() == VariableType::IntT && !var->GetVariableSubType().isSet(VariableSubType::Pointer);
+    //    }
+    //};
+
+
+    template <>
+    struct VarTraits<const char*> {
+        using Type = const char*;
+
+        static Type GetAs(const VariableHelper& holder) { return holder.GetAs<Type>(); }
+
+        template <IsMatchingUnderlyingType<Type> NewT>
+        static void SetAs(const VariableHelper& holder, NewT newValue) {
+            if (!holder.IsNull())
+                GDllInterface.copyStringIntoVariable(newValue, &holder.typeThing, &holder.holder);
+        }
+        static bool VerifyTypeMatch(const ENF_Variable* var) {
+            return var && var->GetVariableType() == VariableType::StringT && !var->GetVariableSubType().isSet(VariableSubType::Pointer);
+        }
+    };
+
+    template <>
+    struct VarTraits<std::string_view> {
+        using Type = std::string_view;
+
+        static Type GetAs(const VariableHelper& holder) { return holder.GetAs<const char*>(); }
+
+        template <IsMatchingUnderlyingType<Type> NewT>
+        static void SetAs(const VariableHelper& holder, NewT newValue) = delete; // Cannot set a string_view :D Engine doesn't support non null terminated string so this would need a bit more work
+        static bool VerifyTypeMatch(const ENF_Variable* var) {
+            return var && var->GetVariableType() == VariableType::StringT && !var->GetVariableSubType().isSet(VariableSubType::Pointer);
+        }
+    };
+
+    // Array of floats
+    template <>
+    struct VarTraits<Vector3> {
+        using Type = Vector3;
+
+        static Type GetAs(const VariableHelper& holder) { return holder.GetAs<float*>(); }
+
+        template <IsMatchingUnderlyingType<Type> NewT>
+        static void SetAs(const VariableHelper& holder, NewT newValue) {
+            if (!holder.IsNull())
+                memcpy(holder.GetAs<float*>(), newValue.d, sizeof(float) * 3);
+        }
+        static bool VerifyTypeMatch(const ENF_Variable* var) {
+            return var && var->GetVariableType() == VariableType::VectorT && var->GetVariableSubType().isSet(VariableSubType::Pointer) && var->GetSize() == 3;
+        }
+    };
+
+    //#TODO Vector4, Quaternion, Matrix33, Matrix43, what else?
+
+
+
+#define ARRAYTYPE(TYPE)                                                                                                                                          \
+    template <>                                                                                                                                                  \
+    struct VarTraits<std::span<TYPE>> {                                                                                                                           \
+        static std::span<TYPE> GetAs(const VariableHelper& holder) { return holder.GetAs<ENF_ArrayInstance<TYPE>*>()->GetArray().AsSpan(); }                     \
+        template <IsMatchingUnderlyingType<std::span<TYPE>> NewT>                                                                                                \
+        static void SetAs(const VariableHelper& holder, NewT newValue) = delete; /* Cannot set arrays currently, need to implement writing to ArrayInstance */   \
+        static bool VerifyTypeMatch(const ENF_Variable* var) {                                                                                                   \
+            return var && var->GetVariableType() == VariableType::ClassT /*Class type is "Array"*/ && var->GetVariableSubType().isSet(VariableSubType::Pointer); \
+        }                                                                                                                                                        \
+    };
+
+#ifndef __linux__ // GCC internal compiler error https://gcc.gnu.org/bugzilla/show_bug.cgi?id=100583
+
+    ARRAYTYPE(Vector3)
+    ARRAYTYPE(const char*)
+    ARRAYTYPE(float)
+    ARRAYTYPE(int)
+    ARRAYTYPE(bool)
+
+#endif
+#undef ARRAYTYPE
+
+
+}
+
 
 
 
@@ -241,7 +363,7 @@ public:
         if (VerifyType<Type>()) {
             getHelper().SetAs<Type>(value);
         } else
-            __debugbreak(); // You passed a invalid type, the variable stored here is not the type you are trying to set it ass
+            Util::BreakToDebuggerIfPresent(); // You passed a invalid type, the variable stored here is not the type you are trying to set it ass
     };
 
     bool IsNull() const {
@@ -297,7 +419,7 @@ public:
         if (VerifyType<Type>(index)) {
             getHelper(index).SetAs<Type>(value);
         } else
-            __debugbreak(); // You passed a invalid type, the variable stored here is not the type you are trying to set it ass
+            Util::BreakToDebuggerIfPresent(); // You passed a invalid type, the variable stored here is not the type you are trying to set it ass
     };
 
     bool IsNull(uint32_t index) const {
@@ -326,6 +448,14 @@ protected:
     }
 };
 
+namespace internal {
+    template <class, template <class> class>
+    struct is_instance : public std::false_type {};
+
+    template <class T, template <class> class U>
+    struct is_instance<U<T>, U> : public std::true_type {};
+}
+
 export class ClassInstanceVariable {
 public:
     ClassInstanceVariable(VariableHelper* varData, ENF_Variable* varTypeStuff) : varData(varData), variableTypeThing(varTypeStuff) {}
@@ -334,7 +464,7 @@ public:
     template <typename Type>
     Type GetAs() const {
 
-        if constexpr (std::_Is_span_v<Type>) {
+        if constexpr (internal::is_instance<Type, std::span>::value) {
             return std::span(getHelper()->GetAs<Type::pointer>(), variableTypeThing->GetSize());
         } else
             return getHelper()->GetAs<Type>();
@@ -345,7 +475,7 @@ public:
         if (VerifyType<Type>()) {
             getHelper()->SetAs<Type>(value);
         } else
-            __debugbreak(); // You passed a invalid type, the variable stored here is not the type you are trying to set it ass
+            Util::BreakToDebuggerIfPresent(); // You passed a invalid type, the variable stored here is not the type you are trying to set it ass
     };
 
     template <typename Type>

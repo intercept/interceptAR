@@ -29,7 +29,7 @@ set(CMAKE_CONFIGURATION_TYPES "Debug;Release" CACHE STRING "" FORCE)
 add_definitions(/DNOMINMAX)
 
 add_subdirectory(common)
-if(EXISTS "${PROJECT_SOURCE_DIR}/host/CMakeLists.txt" AND MSVC)
+if(EXISTS "${PROJECT_SOURCE_DIR}/host/CMakeLists.txt")
     add_subdirectory(host)
 endif()
 add_subdirectory(examplePlugin)
