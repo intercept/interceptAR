@@ -40,3 +40,5 @@ src/out/
 src/vc140.pdb
 
 src/vc140.idb
+
+src/CMakeSettings.json

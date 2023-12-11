@@ -11,7 +11,7 @@ public:
     uint32_t size;
 
 
-    std::span<Type> AsSpan() const {
-        return std::span<Type>(data, size);
+    auto AsSpan() const {
+        return std::span(data, size);
     }
 };

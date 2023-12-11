@@ -70,7 +70,7 @@ export enum class VariableSubType : uint32_t {
     Pointer = 1 << 6
 };
 
-class VariableTypeInfo {
+export class VariableTypeInfo {
     uint32_t type{0}; // Type is only the first 4 bits, the rest is smth else
     VariableSubType subtype{0};
 public:
@@ -104,7 +104,7 @@ public:
 
 // I would put the get templates into Variable Helper, but cannot use templates here, not supported in GCC https://gcc.gnu.org/bugzilla/show_bug.cgi?id=85282
 
-class VariableHelper;
+export class VariableHelper;
 
 namespace internal {
     template<typename Type>
@@ -327,7 +327,7 @@ namespace internal {
         }                                                                                                                                                        \
     };
 
-#ifndef __linux__ // GCC internal compiler error https://gcc.gnu.org/bugzilla/show_bug.cgi?id=100583
+//#ifndef __linux__ // GCC internal compiler error https://gcc.gnu.org/bugzilla/show_bug.cgi?id=100583
 
     ARRAYTYPE(Vector3)
     ARRAYTYPE(const char*)
@@ -335,7 +335,7 @@ namespace internal {
     ARRAYTYPE(int)
     ARRAYTYPE(bool)
 
-#endif
+//#endif
 #undef ARRAYTYPE
 
 
@@ -454,6 +454,14 @@ namespace internal {
 
     template <class T, template <class> class U>
     struct is_instance<U<T>, U> : public std::true_type {};
+
+
+    template <typename T>
+    struct is_span : public std::false_type {};
+
+    template <typename X>
+    struct is_span<std::span<X>> : public std::true_type {};
+
 }
 
 export class ClassInstanceVariable {
@@ -462,9 +470,8 @@ public:
 
 
     template <typename Type>
-    Type GetAs() const {
-
-        if constexpr (internal::is_instance<Type, std::span>::value) {
+    [[nodiscard]] Type GetAs() const {
+        if constexpr (internal::is_span<Type>::value) {
             return std::span(getHelper()->GetAs<Type::pointer>(), variableTypeThing->GetSize());
         } else
             return getHelper()->GetAs<Type>();
@@ -536,15 +543,35 @@ export class ClassInstance {
 
     uint32_t GetVariableIndex(std::string_view name) const {
         auto& vars = *(ENF_Array<Variable*>*)((uintptr_t)classInfo + 0x58);
-        auto found = std::ranges::find_if(vars.AsSpan(), [name](const Variable* var) { return name.compare(var->GetName()) == 0; });
+        auto found = std::ranges::find_if(
+#ifdef __linux__
+            vars.data, vars.data+vars.size // GCC internal compiler error, https://gcc.gnu.org/bugzilla/show_bug.cgi?id=100583
+#else
+            vars.AsSpan()
+#endif
+            
+            , [name](const Variable* var) { return name.compare(var->GetName()) == 0; });
+#ifdef __linux__
+        if (found == vars.data + vars.size) // GCC internal compiler error, span is broken??
+#else
         if (found == vars.AsSpan().end())
+#endif
             return -1;
+
+#ifdef __linux__
+        return std::distance(vars.data, found); // GCC internal compiler error, https://gcc.gnu.org/bugzilla/show_bug.cgi?id=100583
+#else
         return std::distance(vars.AsSpan().begin(), found);
+#endif
     }
 
     Variable* GetVariableRawAt(uint32_t index) const {
         auto& vars = *(ENF_Array<Variable*>*)((uintptr_t)classInfo + 0x58);
+#ifdef __linux__
+        auto var = vars.data[index]; // GCC internal compiler error, https://gcc.gnu.org/bugzilla/show_bug.cgi?id=100583
+#else
         auto var = vars.AsSpan()[index];
+#endif
         return var;
     }
 
@@ -595,7 +622,7 @@ public:
 // P2
 
 
-class IScriptClassBaseSimple {
+export class IScriptClassBaseSimple {
     uint64_t internalBuffer[8] {};
 protected:
 
@@ -616,10 +643,17 @@ public:
     virtual void DoSetup(RegisterFuncHandler) = 0;
 };
 
+
+//export template <template <unsigned> class classname>
+#if !__cpp_nontype_template_parameter_class
+export template <auto classname>
+#else
 export template <FixedString classname>
+#endif
 class ScriptClassBaseSimple : public IScriptClassBaseSimple {
 public:
     ScriptClassBaseSimple() : IScriptClassBaseSimple(std::string_view(classname)) {}
+    using RegisterFuncHandler = IScriptClassBaseSimple::RegisterFuncHandler;
 };
 
 

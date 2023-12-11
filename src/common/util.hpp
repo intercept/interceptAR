@@ -2,8 +2,16 @@
 
 using namespace std::string_view_literals;
 
+#ifdef INTERCEPT_NO_MODULE
+#define I_INLINE inline
+#else
+#define I_INLINE
+#endif
+
+
+
 export namespace Util {
-    std::vector<std::string_view>& split(std::string_view s, char delim, std::vector<std::string_view>& elems) {
+    I_INLINE std::vector<std::string_view>& split(std::string_view s, char delim, std::vector<std::string_view>& elems) {
         std::string::size_type lastPos = 0;
         const std::string::size_type length = s.length();
 
@@ -23,13 +31,13 @@ export namespace Util {
     }
 
 
-    std::vector<std::string_view> split(std::string_view s, char delim) {
+    I_INLINE std::vector<std::string_view> split(std::string_view s, char delim) {
         std::vector<std::string_view> elems;
         split(s, delim, elems);
         return elems;
     }
 
-    std::string_view trim(std::string_view string, std::string_view trimChars) {
+    I_INLINE std::string_view trim(std::string_view string, std::string_view trimChars) {
         if (string.empty())
             return "";
 
@@ -43,7 +51,7 @@ export namespace Util {
     }
 
 
-    std::string_view trim(std::string_view string) {
+    I_INLINE std::string_view trim(std::string_view string) {
         /*
          * Trims tabs and spaces on either side of the string.
          */
@@ -53,14 +61,14 @@ export namespace Util {
         return trim(string, "\t "sv);
     }
 
-    std::string toLower(std::string_view string) {
+    I_INLINE std::string toLower(std::string_view string) {
         std::string ret(string);
         std::transform(ret.begin(), ret.end(), ret.begin(), ::tolower);
 
         return ret;
     }
 
-    bool stringEqualsCaseInsensitive(std::string_view l, std::string_view r) {
+    I_INLINE bool stringEqualsCaseInsensitive(std::string_view l, std::string_view r) {
         if (l.length() != r.length())
             return false;
 
@@ -71,20 +79,20 @@ export namespace Util {
                           });
     }
 
-    float parseArmaNumber(std::string_view armaNumber) {
+    I_INLINE float parseArmaNumber(std::string_view armaNumber) {
         return static_cast<float>(std::strtof(armaNumber.data(), nullptr));
     }
-    int parseArmaNumberToInt(std::string_view armaNumber) {
+    I_INLINE int parseArmaNumberToInt(std::string_view armaNumber) {
         return static_cast<int>(std::round(parseArmaNumber(armaNumber)));
     }
-    int64_t parseArmaNumberToInt64(std::string_view armaNumber) {
+    I_INLINE int64_t parseArmaNumberToInt64(std::string_view armaNumber) {
         int64_t ret;
         std::from_chars(armaNumber.data(), armaNumber.data() + armaNumber.length(), ret);
         // #TODO error checking?
         return ret;
     }
 
-    bool isTrue(std::string_view string) {
+    I_INLINE bool isTrue(std::string_view string) {
         if (string.length() != 4) // small speed optimization
             return string.length() == 1 && string.at(0) == '1';
         return string == "true";
@@ -97,7 +105,7 @@ export namespace Util {
         [[nodiscard]] size_t operator()(const std::string& txt) const { return std::hash<std::string>{}(txt); }
     };
 
-    std::filesystem::path GetCurrentDLLPath() {
+    I_INLINE std::filesystem::path GetCurrentDLLPath() {
 #ifdef _WIN32
         char path[MAX_PATH];
         HMODULE hm = NULL;
@@ -122,7 +130,7 @@ export namespace Util {
 #endif
     }
 
-    std::wstring UTF8ToUTF16(std::string_view input) {
+    I_INLINE std::wstring UTF8ToUTF16(std::string_view input) {
 #ifdef _WIN32
         const auto wantedSize = MultiByteToWideChar(CP_UTF8, 0, input.data(), input.length(), nullptr, 0);
         std::wstring result;
@@ -135,7 +143,7 @@ export namespace Util {
 #endif
     }
 
-    std::string UTF16ToUTF8(std::wstring_view input) {
+    I_INLINE std::string UTF16ToUTF8(std::wstring_view input) {
 #ifdef _WIN32
         const auto wantedSize = WideCharToMultiByte(CP_UTF8, 0, input.data(), input.length(), nullptr, 0, nullptr, nullptr);
         std::string result;
@@ -149,7 +157,7 @@ export namespace Util {
     }
 
 
-    void* GetArmaHostProcAddress(std::string name) {
+    I_INLINE void* GetArmaHostProcAddress(std::string name) {
 #ifdef _WIN32
         return GetProcAddress(GetModuleHandleA(nullptr), name.data());
 #else
@@ -158,7 +166,7 @@ export namespace Util {
 #endif
     }
 
-    bool IsDebuggerPresent() {
+    I_INLINE bool IsDebuggerPresent() {
 #ifdef _WIN32
         return ::IsDebuggerPresent();
 #else
@@ -167,7 +175,7 @@ export namespace Util {
 #endif
     }
 
-    void BreakToDebuggerIfPresent() {
+   I_INLINE  void BreakToDebuggerIfPresent() {
 #ifdef _WIN32
         if (::IsDebuggerPresent())
             __debugbreak();
@@ -176,7 +184,7 @@ export namespace Util {
 #endif
     }
 
-    void WaitForDebuggerSilent() {
+    I_INLINE void WaitForDebuggerSilent() {
 #ifdef _WIN32
         if (IsDebuggerPresent())
             return;
@@ -191,7 +199,7 @@ export namespace Util {
 #endif
     }
 
-    void WaitForDebuggerPrompt() {
+    I_INLINE void WaitForDebuggerPrompt() {
 #ifdef _WIN32
         if (IsDebuggerPresent())
             return;
@@ -207,7 +215,7 @@ export namespace Util {
     }
 
 
-    void PrintDebugString(std::string message) {
+    I_INLINE void PrintDebugString(std::string message) {
 #ifdef _WIN32
         OutputDebugStringA(message.data());
         OutputDebugStringA("\n");
@@ -232,7 +240,7 @@ struct FixedString {
 export template <unsigned N>
 FixedString(char const (&)[N]) -> FixedString<N - 1>;
 
-
+#undef I_INLINE
 
 
 

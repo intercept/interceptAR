@@ -1,13 +1,13 @@
 #pragma once
 
-class VariableDataHolder;
-class FunctionArgumentsHandler;
-class FunctionResultHandler;
-class ENF_Variable;
+export class VariableDataHolder;
+export class FunctionArgumentsHandler;
+export class FunctionResultHandler;
+export class ENF_Variable;
 
 
 export typedef void (*ScriptFunc)(FunctionArgumentsHandler& args, FunctionResultHandler& result);
-class IScriptClassBaseSimple;
+export class IScriptClassBaseSimple;
 export typedef void (*registerClassT)(IScriptClassBaseSimple* self, std::string_view name, bool doReg);
 
 // Same as Enforce Script
@@ -72,8 +72,6 @@ inline uint8_t PtrHash(uintptr_t input) { //#TODO move to Util?
 
     return res;
 }
-
-#include <Windows.h>
 
 extern "C" {
 extern BOOL WINAPI _DllMainCRTStartup(
@@ -151,7 +149,7 @@ export extern "C" BOOL InterceptEntryPoint(HINSTANCE const instance,
 
 // Linux entry point
 
-void __attribute__((constructor(0))) InterceptEntryPoint(void) {
+inline void __attribute__((constructor(0))) InterceptEntryPoint(void) {
 
     // find host
     Util::BreakToDebuggerIfPresent();

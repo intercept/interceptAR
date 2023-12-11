@@ -1,4 +1,8 @@
+#ifndef INTERCEPT_NO_MODULE
 module;
+#else
+#pragma once
+#endif
 
 // Headers included in the global module fragment can be used by the module implementation but are not exported.
 
@@ -39,8 +43,11 @@ module;
 
 #pragma warning(pop)
 
-
+#ifndef INTERCEPT_NO_MODULE
 export module InterceptCommon;
+#else
+#define export
+#endif
 
 
 
@@ -51,3 +58,9 @@ export module InterceptCommon;
 #include "interceptTypes.hpp"
 #include "enfusionContainers.hpp"
 #include "enfusionTypes.hpp"
+
+
+#ifdef INTERCEPT_NO_MODULE
+#undef export
+#endif
+
