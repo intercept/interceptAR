@@ -9,6 +9,7 @@ module;
 #ifdef _WIN32
 #include <Windows.h>
 #include <Psapi.h>
+#undef ERROR
 #endif
 
 #include <type_traits>

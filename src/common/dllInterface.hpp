@@ -41,7 +41,7 @@ public:
 export inline
 #ifndef WIN32
     __attribute__((visibility("default")))
-    //__attribute__((__symver__("GDllInterface@1")))
+    //__attribute__((__symver__("GDllInterface@1025")))
 #endif
 DllInterface GDllInterface;
 
@@ -62,7 +62,7 @@ public:
 
 #ifdef _WIN32
 
-uint8_t PtrHash(uintptr_t input) { //#TODO move to Util?
+inline uint8_t PtrHash(uintptr_t input) { //#TODO move to Util?
     // auto bytes = std::bit_cast<std::array<uint8_t, sizeof(uintptr_t)>>(input); // MSVC I have no fucking idea whats wrong with you
     auto bytes = std::span<uint8_t>(reinterpret_cast<uint8_t*>(&input) + 1, 7);
     uint8_t res = 0;
@@ -119,7 +119,7 @@ export extern "C" BOOL InterceptEntryPoint(HINSTANCE const instance,
         return false;
     }
 
-    auto& hostDllInterface = *reinterpret_cast<const DllInterface*>(GetProcAddress(hLoadedLibrary, MAKEINTRESOURCEA(1)));
+    auto& hostDllInterface = *reinterpret_cast<const DllInterface*>(GetProcAddress(hLoadedLibrary, MAKEINTRESOURCEA(1025)));
 
     if (hostDllInterface.version != DllInterface::CurrentVersion) {
 
@@ -160,7 +160,7 @@ void __attribute__((constructor(0))) InterceptEntryPoint(void) {
     // https://anadoxin.org/blog/control-over-symbol-exports-in-gcc.html/
     //  -fvisibility=hidden compile option?
 
-    auto& hostDllInterface = *reinterpret_cast<const DllInterface*>(dlsym(hostRef, "GDllInterface@1"));
+    auto& hostDllInterface = *reinterpret_cast<const DllInterface*>(dlsym(hostRef, "GDllInterface@1025"));
 
     if (hostDllInterface.version != DllInterface::CurrentVersion) {
 

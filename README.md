@@ -24,14 +24,14 @@ Note: If you get **crashes** in your plugins, please don't submit the crash repo
 There will be additional installation methods in the future.
 
 1. Download the [latest InterceptAR release](https://github.com/intercept/interceptAR/releases/).
-2. Take the InterceptHost.dll, rename it to Secur32.dll and place it next to your ArmaReforgerServer.exe or ArmaReforgerWorkbench.exe
+2. Take the InterceptHost.dll, rename it to dbgcore.dll and place it next to your ArmaReforgerServer.exe or ArmaReforgerWorkbench.exe
 3. Create a Intercept Plugin, you can use the [Plugin Template](https://github.com/intercept/interceptAR-plugin-template) as a guide.
 4. Place your plugin's DLL file into the "interceptPlugins" folder next to your desired .exe file.
 
 You should end up with a setup like this
 - Arma Reforger Server
   - ArmaReforgerServer.exe
-  - Secur32.dll
+  - dbgcore.dll
   - interceptPlugins
     - examplePlugin.dll
 
