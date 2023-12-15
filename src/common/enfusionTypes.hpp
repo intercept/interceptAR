@@ -253,12 +253,12 @@ namespace internal {
     // struct VarTraits<uint64_t> {
     //    using Type = uint64_t;
     //
-    //    Type GetAs(const VariableHelper& holder) const { return holder.GetAs<Type>(); }
+    //    Type GetAs(const VariableHelper& holder) const { return holder.holder.GetAs<Type>(); }
     //
     //    template <IsMatchingUnderlyingType<Type> NewT>
     //    void SetAs(const VariableHelper& holder, NewT newValue) const {
     //        if (!holder.IsNull())
-    //            holder.GetAs<Type>() = value;
+    //            holder.holder.GetAs<Type>() = value;
     //    }
     //    bool VerifyTypeMatch(const ENF_Variable* var) {
     //        return var && var->GetVariableType() == VariableType::IntT && !var->GetVariableSubType().isSet(VariableSubType::Pointer);
@@ -270,7 +270,7 @@ namespace internal {
     struct VarTraits<const char*> {
         using Type = const char*;
 
-        static Type GetAs(const VariableHelper& holder) { return holder.GetAs<Type>(); }
+        static Type GetAs(const VariableHelper& holder) { return holder.holder.GetAs<Type>(); }
 
         template <IsMatchingUnderlyingType<Type> NewT>
         static void SetAs(const VariableHelper& holder, NewT newValue) {
@@ -286,7 +286,7 @@ namespace internal {
     struct VarTraits<std::string_view> {
         using Type = std::string_view;
 
-        static Type GetAs(const VariableHelper& holder) { return holder.GetAs<const char*>(); }
+        static Type GetAs(const VariableHelper& holder) { return holder.holder.GetAs<const char*>(); }
 
         template <IsMatchingUnderlyingType<Type> NewT>
         static void SetAs(const VariableHelper& holder, NewT newValue) = delete; // Cannot set a string_view :D Engine doesn't support non null terminated string so this would need a bit more work
@@ -300,12 +300,12 @@ namespace internal {
     struct VarTraits<Vector3> {
         using Type = Vector3;
 
-        static Type GetAs(const VariableHelper& holder) { return holder.GetAs<float*>(); }
+        static Type GetAs(const VariableHelper& holder) { return holder.holder.GetAs<float*>(); }
 
         template <IsMatchingUnderlyingType<Type> NewT>
         static void SetAs(const VariableHelper& holder, NewT newValue) {
             if (!holder.IsNull())
-                memcpy(holder.GetAs<float*>(), newValue.d, sizeof(float) * 3);
+                memcpy(holder.holder.GetAs<float*>(), newValue.d, sizeof(float) * 3);
         }
         static bool VerifyTypeMatch(const ENF_Variable* var) {
             return var && var->GetVariableType() == VariableType::VectorT && var->GetVariableSubType().isSet(VariableSubType::Pointer) && var->GetSize() == 3;
@@ -319,7 +319,7 @@ namespace internal {
 #define ARRAYTYPE(TYPE)                                                                                                                                          \
     template <>                                                                                                                                                  \
     struct VarTraits<std::span<TYPE>> {                                                                                                                           \
-        static std::span<TYPE> GetAs(const VariableHelper& holder) { return holder.GetAs<ENF_ArrayInstance<TYPE>*>()->GetArray().AsSpan(); }                     \
+        static std::span<TYPE> GetAs(const VariableHelper& holder) { return holder.holder.GetAs<ENF_ArrayInstance<TYPE>*>()->GetArray().AsSpan(); }                     \
         template <IsMatchingUnderlyingType<std::span<TYPE>> NewT>                                                                                                \
         static void SetAs(const VariableHelper& holder, NewT newValue) = delete; /* Cannot set arrays currently, need to implement writing to ArrayInstance */   \
         static bool VerifyTypeMatch(const ENF_Variable* var) {                                                                                                   \
@@ -509,11 +509,11 @@ protected:
     ENF_Variable* variableTypeThing;
 
     VariableHelper* getHelper() {
-        return reinterpret_cast<VariableHelper*>(varData);
+        return reinterpret_cast<VariableHelper*>(&varData);
     }
 
     const VariableHelper* getHelper() const {
-        return reinterpret_cast<const VariableHelper*>(varData);
+        return reinterpret_cast<const VariableHelper*>(&varData);
     }
 };
 
