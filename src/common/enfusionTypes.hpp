@@ -530,9 +530,9 @@ export class ClassInstance {
     //VariableDataHolder data[1];
 
     VariableHelper* GetDataHolders() const {
-        uint32_t size = *(uint32_t*)((uintptr_t)classInfo + 0xB8);
+        const uint32_t size = *reinterpret_cast<uint32_t*>(reinterpret_cast<uintptr_t>(classInfo) + 0xB8);
 
-        return (VariableHelper*)(((uintptr_t)this) + size);
+        return reinterpret_cast<VariableHelper*>(reinterpret_cast<uintptr_t>(this) + size);
     }
 
     class Variable : public ENF_Variable { // Inherits from ENF_Variable, but data holder here is actually empty, data is after class instance by offset
@@ -542,31 +542,26 @@ export class ClassInstance {
     };
 
     uint32_t GetVariableIndex(std::string_view name) const {
-        auto& vars = *(ENF_Array<Variable*>*)((uintptr_t)classInfo + 0x58);
-        auto found = std::ranges::find_if(
-#ifdef __linux__
-            vars.data, vars.data+vars.size // GCC internal compiler error, https://gcc.gnu.org/bugzilla/show_bug.cgi?id=100583
-#else
-            vars.AsSpan()
-#endif
-            
-            , [name](const Variable* var) { return name.compare(var->GetName()) == 0; });
-#ifdef __linux__
-        if (found == vars.data + vars.size) // GCC internal compiler error, span is broken??
-#else
-        if (found == vars.AsSpan().end())
-#endif
-            return -1;
+        auto& vars = *reinterpret_cast<ENF_Array<Variable*>*>(reinterpret_cast<uintptr_t>(classInfo) + 0x58);
+        const auto testFunc = [name](const Variable* var) { return name.compare(var->GetName()) == 0; };
 
 #ifdef __linux__
-        return std::distance(vars.data, found); // GCC internal compiler error, https://gcc.gnu.org/bugzilla/show_bug.cgi?id=100583
+        // GCC internal compiler error, https://gcc.gnu.org/bugzilla/show_bug.cgi?id=100583
+        auto found = std::ranges::find_if(vars.data, vars.data + vars.size, testFunc);
+        if (found == vars.data + vars.size)
+            return -1;
+        return std::distance(vars.data, found);
 #else
-        return std::distance(vars.AsSpan().begin(), found);
+        auto varsSpan = vars.AsSpan();
+        auto found = std::ranges::find_if(varsSpan, testFunc);
+         if (found == varsSpan.end())
+            return -1;
+         return std::distance(varsSpan.begin(), found);
 #endif
     }
 
     Variable* GetVariableRawAt(uint32_t index) const {
-        auto& vars = *(ENF_Array<Variable*>*)((uintptr_t)classInfo + 0x58);
+        auto& vars = *reinterpret_cast<ENF_Array<Variable*>*>(reinterpret_cast<uintptr_t>(classInfo) + 0x58);
 #ifdef __linux__
         auto var = vars.data[index]; // GCC internal compiler error, https://gcc.gnu.org/bugzilla/show_bug.cgi?id=100583
 #else
@@ -576,16 +571,16 @@ export class ClassInstance {
     }
 
     VariableHelper* GetVariableAt(uint32_t index) const {
-        auto var = GetVariableRawAt(index);
-        auto offset = var->offset * 4;
+        const auto var = GetVariableRawAt(index);
+        const auto offset = var->offset * 4;
 
-        return (VariableHelper*)((uintptr_t)GetDataHolders() + offset);
+        return reinterpret_cast<VariableHelper*>(reinterpret_cast<uintptr_t>(GetDataHolders()) + offset);
     }
 
 public:
 
     std::optional<ClassInstanceVariable> GetVariable(std::string_view name) const {
-        auto index = GetVariableIndex(name);
+        const auto index = GetVariableIndex(name);
         if (index == -1)
             return {};
 
