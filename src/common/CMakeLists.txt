@@ -44,9 +44,9 @@ SET(CommonSources "${CommonSources}" CACHE INTERNAL "CommonSources")
 
     #file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/interceptCommon.ixx DESTINATION ${CMAKE_CURRENT_SOURCE_DIR}/GCCBugFix.cpp)
     #configure_file(${CMAKE_CURRENT_SOURCE_DIR}/interceptCommon.ixx ${CMAKE_CURRENT_SOURCE_DIR}/GCCBugFix.cpp COPYONLY)
-    add_module(interceptCommon interceptCommon.cpp)
-    add_custom_target(gccBugFixFile ALL COMMAND ${CMAKE_COMMAND} -E create_symlink "interceptCommon.ixx" "${CMAKE_CURRENT_SOURCE_DIR}/interceptCommon.cpp")
-    add_dependencies(interceptCommon.gcm gccBugFixFile)
+    #add_module(interceptCommon interceptCommon.cpp)
+    #add_custom_target(gccBugFixFile ALL COMMAND ${CMAKE_COMMAND} -E create_symlink "interceptCommon.ixx" "${CMAKE_CURRENT_SOURCE_DIR}/interceptCommon.cpp")
+    #add_dependencies(interceptCommon.gcm gccBugFixFile)
 
 
     #add_dependencies(interceptCommon.gcm gccBugFixFile)
@@ -63,11 +63,12 @@ SET(CommonSources "${CommonSources}" CACHE INTERNAL "CommonSources")
     #add_system_header_unit(functional)
     #add_system_header_unit(typeinfo)
     #add_system_header_unit(optional)
-    #add_dependencies(interceptCommon.gcm filesystem.gcm string_view.gcm vector.gcm array.gcm charconv.gcm span.gcm cstdint.gcm functional.gcm typeinfo.gcm optional.gcm)
+    #add_system_header_unit(string)
+    #add_dependencies(interceptCommon.gcm filesystem.gcm string_view.gcm vector.gcm array.gcm charconv.gcm span.gcm cstdint.gcm functional.gcm typeinfo.gcm optional.gcm string.gcm)
 
 
-    add_custom_target(gcmLinkCommon ALL COMMAND ${CMAKE_COMMAND} -E create_symlink "../gcm.cache" "gcm.cache") # #TODO custom for plugin template
-    add_dependencies(interceptCommon.gcm gcmLinkCommon)
+    #add_custom_target(gcmLinkCommon ALL COMMAND ${CMAKE_COMMAND} -E create_symlink "${CMAKE_BINARY_DIR}/gcm.cache" "gcm.cache") # #TODO custom for plugin template
+    #add_dependencies(interceptCommon.gcm gcmLinkCommon)
 
     # g++ -std=c++20 -fmodules-ts -xc++-system-header iostream
 elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")

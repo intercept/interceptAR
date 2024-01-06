@@ -472,7 +472,7 @@ public:
     template <typename Type>
     [[nodiscard]] Type GetAs() const {
         if constexpr (internal::is_span<Type>::value) {
-            return std::span(getHelper()->GetAs<Type::pointer>(), variableTypeThing->GetSize());
+            return std::span(getHelper()->GetAs<typename Type::pointer>(), variableTypeThing->GetSize());
         } else
             return getHelper()->GetAs<Type>();
     };
