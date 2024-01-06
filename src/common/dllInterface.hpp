@@ -149,16 +149,17 @@ export extern "C" BOOL InterceptEntryPoint(HINSTANCE const instance,
 
 // Linux entry point
 
+#ifndef INTERCEPT_HOST
+
 inline void __attribute__((constructor(0))) InterceptEntryPoint(void) {
 
     // find host
-    Util::BreakToDebuggerIfPresent();
-    auto hostRef = dlopen("InterceptHost.so", RTLD_NOLOAD);
+    auto hostRef = dlopen("./InterceptHost.so", RTLD_NOLOAD);
 
     // https://anadoxin.org/blog/control-over-symbol-exports-in-gcc.html/
     //  -fvisibility=hidden compile option?
 
-    auto& hostDllInterface = *reinterpret_cast<const DllInterface*>(dlsym(hostRef, "GDllInterface@1025"));
+    auto& hostDllInterface = *reinterpret_cast<const DllInterface*>(dlsym(hostRef, "GDllInterface"));
 
     if (hostDllInterface.version != DllInterface::CurrentVersion) {
 
@@ -180,6 +181,6 @@ inline void __attribute__((constructor(0))) InterceptEntryPoint(void) {
     GDllInterface = hostDllInterface;
 }
 
-
+#endif // INTERCEPT_HOST
 
 #endif
