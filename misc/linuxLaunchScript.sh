@@ -1,5 +1,5 @@
 #!/bin/bash
 
-export LD_PRELOAD=InterceptHost.so
+export LD_PRELOAD=./InterceptHost.so
 
 ./ArmaReforgerServer $@

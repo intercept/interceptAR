@@ -23,6 +23,8 @@ Note: If you get **crashes** in your plugins, please don't submit the crash repo
 
 There will be additional installation methods in the future.
 
+### Windows
+
 1. Download the [latest InterceptAR release](https://github.com/intercept/interceptAR/releases/).
 2. Take the InterceptHost.dll, rename it to dbgcore.dll and place it next to your ArmaReforgerServer.exe or ArmaReforgerWorkbench.exe
 3. Create a Intercept Plugin, you can use the [Plugin Template](https://github.com/intercept/interceptAR-plugin-template) as a guide.
@@ -34,6 +36,51 @@ You should end up with a setup like this
   - dbgcore.dll
   - interceptPlugins
     - examplePlugin.dll
+
+### Linux
+
+!! Only Ubuntu 22.04 has been tested so far.
+
+1. Download the [latest InterceptAR release](https://github.com/intercept/interceptAR/releases/).
+2. Take the InterceptHost.so file and place it next to your ArmaReforgerServer.
+3. Either use the [Wrapper Script](https://github.com/intercept/interceptAR/blob/master/misc/linuxLaunchScript.sh) to launch your server, or manually use LD to launch the server and load Intercept
+```
+/lib64/ld-linux-x86-64.so.2 --preload ./InterceptHost.so ./ArmaReforgerServer -config "./serverconfig/ServerCfg.json"
+```
+4. Create a Intercept Plugin, you can use the [Plugin Template](https://github.com/intercept/interceptAR-plugin-template) as a guide.
+5. Place your plugin's SO file into a "interceptPlugins" folder next to your desired ArmaReforgerServer file.
+
+
+
+## Debugging
+
+### Windows
+
+To debug your plugin on windows, simply attach your IDE's Debugger to running process, and attach it to your Workbench/Server.
+
+### Linux
+
+Run LD and your Server through gdb
+```
+gdb --args /lib64/ld-linux-x86-64.so.2 --preload ./InterceptHost.so ./ArmaReforgerServer -config "./serverconfig/ServerCfg.json"
+```
+You can also do this directly in Visual Studio code via launch.json.
+Only abbreviated example here, refer to your own launch.json for the rest
+```json
+            "name": "(gdb) Launch",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "/lib64/ld-linux-x86-64.so.2",
+            "args": [ 
+                "--preload",
+                "./InterceptHost.so",
+                "./ArmaReforgerServer",
+                "-config",
+                "\"./serverconfig/ServerCFG.json\""
+            ],
+            "stopAtEntry": false,
+            "cwd": "/home/server/steam/steamapps/common/Arma Reforger Server",
+```
 
 
 ## Example
