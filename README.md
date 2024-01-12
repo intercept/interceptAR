@@ -1,4 +1,5 @@
 ![Intercept](http://i.imgur.com/J0PC0G0.png)
+[![Discord](https://img.shields.io/badge/Discord-Join-darkviolet.svg)](https://discord.com/invite/qF5qUacg63)
 
 Intercept is a **C++20** binding interface for Arma Reforger's Enfusion Script.
 
