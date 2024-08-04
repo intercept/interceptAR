@@ -640,7 +640,7 @@ public:
 
 
 //export template <template <unsigned> class classname>
-#if !__cpp_nontype_template_parameter_class
+#if !__cpp_nontype_template_args
 export template <auto classname>
 #else
 export template <FixedString classname>
