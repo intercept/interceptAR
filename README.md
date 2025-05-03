@@ -111,7 +111,7 @@ public:
         result.SetAs<float>(133.7f);
     }
 
-    void DoSetup(ScriptClassBaseSimple::RegisterFuncHandler registerFunction) override {
+    void DoSetup(ScriptClassBaseSimple::RegisterFuncHandler registerFunction, Intercept::ClassType* selfType) override {
         // We need to assign Enforce Script function name, to our function implementation here
 
         registerFunction("TestFunction", &TestFunction);

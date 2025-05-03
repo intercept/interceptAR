@@ -1,5 +1,25 @@
-cmake_minimum_required (VERSION 3.12)
+cmake_minimum_required (VERSION 3.30)
+
+# Set experimental flag to enable `import std` support from CMake.
+# This must be enabled before C++ language support.
+set(CMAKE_EXPERIMENTAL_CXX_IMPORT_STD
+  # This specific value changes as experimental support evolves. See
+  # `Help/dev/experimental.rst` in the CMake source corresponding to
+  # your CMake build for the exact value to use.
+  "0e5b6991-d74f-4b3d-a41c-cf096e0b2508")
+  
+# Tell CMake that we explicitly want `import std`. This will initialize the
+# property on all targets declared after this to 1
+set(CMAKE_CXX_MODULE_STD 1)
+
+set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+
+
+
 project (Intercept2 CXX ASM)
+
+
+
 
 if(MSVC)
     set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /std:c++latest" )
@@ -47,7 +67,7 @@ message("COMPILER USED: '${CMAKE_CXX_COMPILER_ID}'")
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${PROJECT_SOURCE_DIR}/release/")
 
-set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 set(PREBUILT_MODULE_PATH ${CMAKE_BINARY_DIR}/modules)
@@ -65,4 +85,6 @@ add_subdirectory(common)
 if(EXISTS "${PROJECT_SOURCE_DIR}/host/CMakeLists.txt")
     add_subdirectory(host)
 endif()
+if(EXISTS "${PROJECT_SOURCE_DIR}/examplePlugin/CMakeLists.txt")
 add_subdirectory(examplePlugin)
+endif()
