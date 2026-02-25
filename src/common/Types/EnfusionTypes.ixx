@@ -90,6 +90,7 @@ public:
     BitflagEnum<VariableSubType> getSubType() const { return subtype; }
 };
 
+extern "C++" {
 export class ENF_Variable : public VariableDataHolder {
 private:
     const char* name;
@@ -112,7 +113,7 @@ public:
         return arraySizeMagic[0] * (arraySizeMagic[1] ? arraySizeMagic[1] : 1); //#TODO wtf?
     }
 };
-
+}
 
 // I would put the get templates into Variable Helper, but cannot use templates here, not supported in GCC https://gcc.gnu.org/bugzilla/show_bug.cgi?id=85282
 
@@ -170,8 +171,7 @@ public:
     }
 };
 
-
-namespace internal {
+extern "C++" namespace internal {
 
     // Checks if input is either A or A& or A&& or const A&, we don't care, use whatever
     template <typename A, typename T>

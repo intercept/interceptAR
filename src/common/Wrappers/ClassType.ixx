@@ -15,7 +15,7 @@ namespace Intercept {
         std::string_view GetName() const {
             return GDllInterface.Type_Function_GetName(this);
         }
-        ScriptModule* GetModule() const {}
+        ScriptModule* GetModule() const { return nullptr; }
     };
 
 
@@ -38,7 +38,7 @@ namespace Intercept {
             return (ClassType*)GDllInterface.Type_Class_GetBaseClass(this);
         }
 
-        void* GetVariable() const {}
+        void* GetVariable() const { return nullptr; }
         void GetFunction(std::string_view name) const {}
 
 

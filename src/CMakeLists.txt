@@ -1,12 +1,11 @@
-cmake_minimum_required (VERSION 3.30)
+cmake_minimum_required (VERSION 4.1)
 
 # Set experimental flag to enable `import std` support from CMake.
 # This must be enabled before C++ language support.
 set(CMAKE_EXPERIMENTAL_CXX_IMPORT_STD
-  # This specific value changes as experimental support evolves. See
-  # `Help/dev/experimental.rst` in the CMake source corresponding to
-  # your CMake build for the exact value to use.
-  "0e5b6991-d74f-4b3d-a41c-cf096e0b2508")
+#	"0e5b6991-d74f-4b3d-a41c-cf096e0b2508" # value as per https://www.kitware.com/import-std-in-cmake-3-30/
+	"d0edc3af-4c50-42ea-a356-e2862fe7a444" # updated value for 4.1.0
+)
   
 # Tell CMake that we explicitly want `import std`. This will initialize the
 # property on all targets declared after this to 1
@@ -16,7 +15,7 @@ set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 
 
 
-project (Intercept2 CXX ASM)
+project (Intercept2 CXX)
 
 
 

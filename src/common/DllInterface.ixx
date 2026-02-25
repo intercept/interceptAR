@@ -31,7 +31,7 @@ export enum class LogLevel : uint8_t {
 };
 
 //#TODO move into internal namespace, need exported for host, but normal users don't access this
-export class DllInterface {
+export extern "C++" class DllInterface {
 public:
     static const uint64_t CurrentVersion = 2;
     uint64_t version = CurrentVersion;
@@ -71,14 +71,14 @@ public:
 
 
 };
-
-export inline
-#ifndef WIN32
-    __attribute__((visibility("default")))
-    //__attribute__((__symver__("GDllInterface@1025")))
-#endif
-DllInterface GDllInterface;
-
+extern "C++" {
+    export inline
+    #ifndef WIN32
+        __attribute__((visibility("default")))
+        //__attribute__((__symver__("GDllInterface@1025")))
+    #endif
+    DllInterface GDllInterface;
+}
 //#TODO move this
 
 export namespace Intercept {

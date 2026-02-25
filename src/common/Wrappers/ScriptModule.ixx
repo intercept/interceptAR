@@ -9,7 +9,7 @@ namespace Intercept {
     export class ClassType;
     export class FunctionType;
 
-    export class ScriptModule {
+    export extern "C++" class ScriptModule {
     public:
 
 
