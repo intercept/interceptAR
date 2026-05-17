@@ -4,7 +4,8 @@ cmake_minimum_required (VERSION 4.1)
 # This must be enabled before C++ language support.
 set(CMAKE_EXPERIMENTAL_CXX_IMPORT_STD
 #	"0e5b6991-d74f-4b3d-a41c-cf096e0b2508" # value as per https://www.kitware.com/import-std-in-cmake-3-30/
-	"d0edc3af-4c50-42ea-a356-e2862fe7a444" # updated value for 4.1.0
+#	"d0edc3af-4c50-42ea-a356-e2862fe7a444" # updated value for 4.1.0
+    "451f2fe2-a8a2-47c3-bc32-94786d8fc91b" # https://github.com/Kitware/CMake/blob/master/Help/dev/experimental.rst
 )
   
 # Tell CMake that we explicitly want `import std`. This will initialize the
