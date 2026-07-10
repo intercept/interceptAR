@@ -6,8 +6,8 @@ import EnfusionTypes;
 
 namespace Intercept {
 
-    export class ClassType;
-    export class FunctionType;
+    extern "C++" export class ClassType;
+    extern "C++" export class FunctionType;
 
     export extern "C++" class ScriptModule {
     public:

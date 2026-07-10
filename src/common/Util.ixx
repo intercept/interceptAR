@@ -4,6 +4,8 @@ module;
 //#include <Psapi.h>
 #include <Windows.h>
 #undef ERROR
+#else
+#include <signal.h>
 #endif
 
 export module Util;

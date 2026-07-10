@@ -7,9 +7,9 @@ import EnfusionTypes;
 
 namespace Intercept {
 
-    export class ScriptModule;
+    extern "C++" export class ScriptModule;
 
-    export class FunctionType {
+    extern "C++" export class FunctionType {
     public:
 
         std::string_view GetName() const {
@@ -19,7 +19,7 @@ namespace Intercept {
     };
 
 
-    export class ClassType {
+    extern "C++" export class ClassType {
     public:
 
         std::string_view (*Type_Class_GetName)(void* classType);

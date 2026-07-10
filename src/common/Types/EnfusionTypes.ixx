@@ -8,7 +8,7 @@ import GenericTypes;
 import DllInterface;
 
 namespace Intercept {
-    export class ClassType;
+    extern "C++" class ClassType;
 }
 
 
@@ -50,7 +50,7 @@ public:
 
 
 
-export class VariableDataHolder {
+extern "C++" export class VariableDataHolder {
     alignas(8) char buffer[8] {};
 public:
     template <typename Type>
@@ -119,7 +119,7 @@ public:
 
 export class VariableHelper;
 
-namespace internal {
+extern "C++" namespace internal {
     template<typename Type>
     struct VarTraits;
 }
@@ -356,7 +356,7 @@ extern "C++" namespace internal {
 
 
 
-export class FunctionResultHandler {
+extern "C++" export class FunctionResultHandler {
 public:
     template <typename Type>
     Type GetAs() const { return getHelper().GetAs<Type>(); };
@@ -401,7 +401,7 @@ protected:
 
 };
 
-export class FunctionArgumentsHandler {
+extern "C++" export class FunctionArgumentsHandler {
 public:
     template <typename Type>
     Type GetAs(uint32_t index) const { return getHelper(index).GetAs<Type>(); };
@@ -629,7 +629,7 @@ public:
 // P2
 
 
-export class IScriptClassBaseSimple {
+extern "C++" export class IScriptClassBaseSimple {
     uint64_t internalBuffer[8] {};
 protected:
 

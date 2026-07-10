@@ -17,3 +17,11 @@ target_compile_features(InterceptCommon
   PRIVATE   cxx_std_23
   INTERFACE cxx_std_20
   PUBLIC cxx_std_20)
+
+
+if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+    target_compile_options(
+        InterceptCommon PRIVATE 
+        "-fPIC"
+    )
+endif()

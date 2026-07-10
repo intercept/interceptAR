@@ -1,6 +1,7 @@
 export module InterceptTypes;
 
 import std;
+import std.compat;
 
 #pragma region Refcounting
 

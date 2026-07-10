@@ -1,6 +1,10 @@
 module;
 
+#ifdef _WIN32
 #include <Windows.h>
+#else
+#include <dlfcn.h>
+#endif
 
 export module DllInterface;
 
@@ -9,14 +13,14 @@ import std.compat;
 import Util;
 
 
-export class VariableDataHolder;
-export class FunctionArgumentsHandler;
-export class FunctionResultHandler;
-export class ENF_Variable;
+extern "C++" class VariableDataHolder;
+extern "C++" class FunctionArgumentsHandler;
+extern "C++" class FunctionResultHandler;
+extern "C++" class ENF_Variable;
 
 
 export typedef void (*ScriptFunc)(FunctionArgumentsHandler& args, FunctionResultHandler& result);
-export class IScriptClassBaseSimple;
+extern "C++" class IScriptClassBaseSimple;
 export typedef void (*registerClassT)(IScriptClassBaseSimple* self, std::string_view name, bool doReg);
 
 // Same as Enforce Script
